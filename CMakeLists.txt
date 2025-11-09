@@ -12,7 +12,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(LIBS glad glfw glm)
-add_executable(fluid)
+add_executable(fluid
+        src/Drain.hpp)
 add_subdirectory(src)
 target_link_libraries(fluid ${LIBS})
 

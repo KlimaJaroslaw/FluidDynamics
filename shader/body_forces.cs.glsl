@@ -17,7 +17,7 @@ void main() {
         cell[index].vel.z += body_force.z * dt;
 
     // wacky winds
-    // cell[get_grid_index(grid_pos)].vel.y += sin(get_world_coord(grid_pos, ivec3(0)).x * 5) * 20 * dt;
-    // cell[get_grid_index(grid_pos)].vel.x += cos(get_world_coord(grid_pos, ivec3(0)).y * 5) * 20 * dt;
+    //cell[get_grid_index(grid_pos)].vel.x += 0.04;
+    //cell[get_grid_index(grid_pos)].vel.x += cos(get_world_coord(grid_pos, ivec3(0)).y * 5) * 20 * dt;
     enforce_boundary_condition(grid_pos);
 }

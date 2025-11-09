@@ -144,9 +144,10 @@ struct Fluid {
                     const glm::vec3 cell_pos = get_world_coord(gpos);
 
                     initial_transfer.emplace_back(P2GTransfer());
-
+                    // It justs places particles when x is less then half
+                    // TODO: add a way to make any fluid shape, also to make constant fluid flow
                     const glm::ivec3& d = grid_cell_dimensions;
-                    if (gx < d.x / 2) {
+                    if (gx < d.x / 5 || gx > d.x *3/5) {
                         initial_grid.emplace_back(GridCell{
                             cell_pos,
                             glm::vec3(0),

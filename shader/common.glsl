@@ -6,6 +6,7 @@ struct Particle {
     vec4 color;
     vec3 pos;
     vec3 vel;
+    int type;
 };
 
 struct GridCell {
@@ -33,6 +34,7 @@ layout(std430, binding=0) restrict buffer ParticleBlock {
     Particle particle[];
 };
 
+// This is where this shit comes from
 layout(std430, binding=1) restrict buffer GridBlock {
     GridCell cell[];
 };
