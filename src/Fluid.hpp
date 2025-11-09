@@ -95,7 +95,8 @@ struct Fluid {
         vao.bind_attrib(circle_verts, 2, GL_FLOAT)
            .bind_attrib(particle_ssbo, offsetof(Particle, pos), sizeof(Particle), 3, GL_FLOAT, gfx::INSTANCED)
            .bind_attrib(particle_ssbo, offsetof(Particle, vel), sizeof(Particle), 3, GL_FLOAT, gfx::INSTANCED)
-           .bind_attrib(particle_ssbo, offsetof(Particle, color), sizeof(Particle), 4, GL_FLOAT, gfx::INSTANCED);
+           .bind_attrib(particle_ssbo, offsetof(Particle, color), sizeof(Particle), 4, GL_FLOAT, gfx::INSTANCED)
+        .bind_attrib(particle_ssbo,offsetof(Particle,type), sizeof(Particle),1,GL_INT,gfx::INSTANCED);
         
         grid_vao.bind_attrib(grid_ssbo, offsetof(GridCell, pos), sizeof(GridCell), 3, GL_FLOAT, gfx::NOT_INSTANCED)
            .bind_attrib(grid_ssbo, offsetof(GridCell, vel), sizeof(GridCell), 3, GL_FLOAT, gfx::NOT_INSTANCED)
@@ -410,22 +411,22 @@ struct Fluid {
         }
     }
 
-
-    void pressure_update(float dt) {
+    void input_and_output()
+    {
         auto grid = particle_ssbo.map_buffer<Particle>();
         std::vector<Particle> current_particles;
         for (int i=0;i<particle_ssbo.length();i++)
         {
-
             int t = grid[i].type;
             if (t!=1)
             {
-                // std::cout << "TYPE: " << t << std::endl;
                 current_particles.push_back(grid[i]);
             }
         }
         particle_ssbo.set_data(current_particles, GL_DYNAMIC_COPY);
+    }
 
+    void pressure_update(float dt) {
         ssbo_barrier();
         pressure_update_program.use();
         glUniform1f(pressure_update_program.uniform_loc("dt"), dt);
@@ -555,6 +556,7 @@ struct Fluid {
         pressure_update(dt);
         grid_to_particle();
         particle_advect(dt);
+        // input_and_output();
     }
 
     void draw_particles(const glm::mat4& projection, const glm::mat4& view, const glm::vec4& viewport) {

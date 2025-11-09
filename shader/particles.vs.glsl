@@ -2,6 +2,7 @@ layout(location=0) in vec2 circle_offset;
 layout(location=1) in vec3 particle_pos;
 layout(location=2) in vec3 vel;
 layout(location=3) in vec4 particle_color;
+layout(location=4) in int type;
 out vec4 color;
 out vec3 vs_particle_pos;
 out float vs_particle_radius;
@@ -24,5 +25,8 @@ void main() {
     }
     if (display_mode == 1) {
         color = vec4(vel * 0.5 + 0.5, 1.0);
+    }
+    if(type==1){
+        color = vec4(1.0,1.0,1.0,0.0);
     }
 }

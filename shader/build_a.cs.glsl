@@ -14,6 +14,7 @@ void build_a() {
         return;
     }
 
+
     float scale = dt / (density * cell_size.x * cell_size.x);
     if (grid_pos.x > 0) {
         uint j = get_grid_index(grid_pos + ivec3(-1, 0, 0));
@@ -36,15 +37,7 @@ void build_a() {
             cell[index].a_diag += scale;
         }
     }
-    // This drains up the water
-    if (grid_pos.x < 2) {
-        uint j = get_grid_index(grid_pos);
-        if (cell[j].type == FLUID) {
-            cell[j].type = AIR;
-            cell[j].pressure = 0;
-            particle[j].type=1;
-        }
-    }
+
 
     if (grid_pos.y < grid_dim.y - 2) {
         uint j = get_grid_index(grid_pos + ivec3(0, 1, 0));

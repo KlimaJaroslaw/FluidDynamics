@@ -44,12 +44,15 @@ void main() {
     if (index >= particle.length()) {
         return;
     }
+    if(particle[index].type==0)
+    {
+        ivec3 base_coord = get_grid_coord(particle[index].pos, ivec3(0));
+        uint grid_index = get_grid_index(base_coord);
+        p2g_transfer[grid_index].is_fluid = true; // does not need to be atomic
 
-    ivec3 base_coord = get_grid_coord(particle[index].pos, ivec3(0));
-    uint grid_index = get_grid_index(base_coord);
-    p2g_transfer[grid_index].is_fluid = true; // does not need to be atomic
+        scatter_vel(index, ivec3(1, 0, 0));
+        scatter_vel(index, ivec3(0, 1, 0));
+        scatter_vel(index, ivec3(0, 0, 1));
+    }
 
-    scatter_vel(index, ivec3(1, 0, 0));
-    scatter_vel(index, ivec3(0, 1, 0));
-    scatter_vel(index, ivec3(0, 0, 1));
 }

@@ -27,17 +27,25 @@ bool ray_sphere_isect(vec3 r0, vec3 rd, vec3 s0, float sr) {
 
 void main() {
     uint index = gl_WorkGroupID.x;
-    // TODO: don't use explicit Euler integration
+    // TODO: don't use explicit Oiler integration
+    //This drains up the water
+    if (particle[index].pos.z <-0.6 && particle[index].pos.x < -0.6) {
+        particle[index].type=1;
+    }
     particle[index].pos += particle[index].vel * dt;
-    
-    // jitter particle positions to prevent squishing
-    const float jitter = 0.005;
-    particle[index].pos += hash3(floatBitsToInt(particle[index].pos)) * jitter - 0.5 * jitter;
 
-    vec3 epsilon = vec3(0.00001);//cell_size - 0.01;
-    particle[index].pos = clamp(particle[index].pos, bounds_min + epsilon, bounds_max - epsilon);
 
-    bool hit = ray_sphere_isect(mouse_pos, normalize(mouse_pos - eye), particle[index].pos, mouse_range);
-    if (hit)
+    if(particle[index].type==0){
+        // jitter particle positions to prevent squishing
+        const float jitter = 0.005;
+        particle[index].pos += hash3(floatBitsToInt(particle[index].pos)) * jitter - 0.5 * jitter;
+
+        vec3 epsilon = vec3(0.00001);//cell_size - 0.01;
+        particle[index].pos = clamp(particle[index].pos, bounds_min + epsilon, bounds_max - epsilon);
+
+        bool hit = ray_sphere_isect(mouse_pos, normalize(mouse_pos - eye), particle[index].pos, mouse_range);
+        if (hit)
         particle[index].vel += mouse_vel;
+    }
+
 }
