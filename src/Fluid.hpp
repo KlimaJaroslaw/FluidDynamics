@@ -78,7 +78,6 @@ struct Fluid {
     SSFRenderTexture ssf_b_texture; // it's double buffered for read/write
 
     Quad quad;
-
     Fluid() {}
 
     void init() {
@@ -160,7 +159,8 @@ struct Fluid {
                                 initial_particles.emplace_back(Particle{
                                     particle_pos,
                                     glm::vec3(0),
-                                    glm::vec4(0.32,0.57,0.79,1.0)
+                                    glm::vec4(0.32,0.57,0.79,1.0),
+                                    0
                                 });
                             }
                         }
@@ -375,6 +375,7 @@ struct Fluid {
     }
 
     void setup_grid_project(float dt) {
+
         ssbo_barrier();
         setup_grid_project_program.use();
         glUniform1f(setup_grid_project_program.uniform_loc("dt"), dt);
@@ -384,6 +385,7 @@ struct Fluid {
         setup_grid_project_program.validate();
         glDispatchCompute(grid_dimensions.x, grid_dimensions.y, grid_dimensions.z);
         setup_grid_project_program.disuse();
+
     }
 
     void pressure_solve() {
@@ -408,7 +410,22 @@ struct Fluid {
         }
     }
 
+
     void pressure_update(float dt) {
+        auto grid = particle_ssbo.map_buffer<Particle>();
+        std::vector<Particle> current_particles;
+        for (int i=0;i<particle_ssbo.length();i++)
+        {
+
+            int t = grid[i].type;
+            if (t!=1)
+            {
+                // std::cout << "TYPE: " << t << std::endl;
+                current_particles.push_back(grid[i]);
+            }
+        }
+        particle_ssbo.set_data(current_particles, GL_DYNAMIC_COPY);
+
         ssbo_barrier();
         pressure_update_program.use();
         glUniform1f(pressure_update_program.uniform_loc("dt"), dt);

@@ -37,10 +37,9 @@ void build_a() {
         }
     }
     // This drains up the water
-    if (grid_pos.x < 2 && grid_pos.y<2) {
+    if (grid_pos.x < 2) {
         uint j = get_grid_index(grid_pos);
         if (cell[j].type == FLUID) {
-            cell[index].a_diag += scale;
             cell[j].type = AIR;
             cell[j].pressure = 0;
             particle[j].type=1;
@@ -71,9 +70,4 @@ void build_a() {
             cell[index].a_diag += scale;
         }
     }
-//    if(grid.pos.z<2) {
-//        if (cell[index].type == FLUID) {
-//            cell[index].type = AIR;
-//        }
-//    }
 }

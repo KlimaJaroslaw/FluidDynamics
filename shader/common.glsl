@@ -83,3 +83,5 @@ ivec3 offset_clamped(ivec3 base_coord, ivec3 dimension_offset) {
         max_size.z = grid_dim.z;
     return clamp(base_coord + dimension_offset, ivec3(0), max_size - ivec3(1));
 }
+
+

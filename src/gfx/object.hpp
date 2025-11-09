@@ -83,6 +83,7 @@ private:
     };
 
 public:
+    //IMPORTANT: Use this to get access to shader data
     template <typename T>
     std::unique_ptr<T[], GlMappedBufferDeleter> map_buffer() {
         if (!id)
@@ -102,6 +103,7 @@ public:
         unbind();
         return ptr;
     }
+
 };
 
 class VAO {
