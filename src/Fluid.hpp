@@ -51,6 +51,7 @@ struct Fluid {
     gfx::VAO debug_lines_vao; // used for drawing colored lines for debugging
     gfx::VAO screen_quad_vao; // fullscreen quad vertices
 
+
     gfx::Program reset_grid_program; // clear grid state
     gfx::Program p2g_accumulate_program; // accumulate new grid velocities from particles
     gfx::Program p2g_apply_program; // copy new grid velocities to grid data
@@ -63,6 +64,7 @@ struct Fluid {
     gfx::Program pressure_to_guess_program; // copy pressure to pressure_guess for pressure solve
     gfx::Program pressure_update_program; // update velocities from pressure gradient
     gfx::Program grid_to_particle_program; // transfer grid velocities to particles
+    gfx::Program spawn_new_program; //Spawns new particles from a source
 
     gfx::Program program; // program for particle rendering
     gfx::Program grid_program;
@@ -91,7 +93,7 @@ struct Fluid {
             circle.emplace_back(glm::vec2(glm::sin(f), glm::cos(f)));
         }
         circle_verts.set_data(circle);
-
+        // Here you can give arguments to the rendering shaders
         vao.bind_attrib(circle_verts, 2, GL_FLOAT)
            .bind_attrib(particle_ssbo, offsetof(Particle, pos), sizeof(Particle), 3, GL_FLOAT, gfx::INSTANCED)
            .bind_attrib(particle_ssbo, offsetof(Particle, vel), sizeof(Particle), 3, GL_FLOAT, gfx::INSTANCED)
@@ -110,7 +112,7 @@ struct Fluid {
             .bind_attrib(debug_lines_ssbo, offsetof(DebugLine, b), sizeof(DebugLine), 3, GL_FLOAT, gfx::NOT_INSTANCED)
             .bind_attrib(debug_lines_ssbo, offsetof(DebugLine, color), sizeof(DebugLine), 4, GL_FLOAT, gfx::NOT_INSTANCED);
         
-        
+        spawn_new_program.compute({"common.glsl","rand.glsl","spawn_new.cs.glsl"}).compile();
         reset_grid_program.compute({"common.glsl", "reset_grid.cs.glsl"}).compile();
         p2g_accumulate_program.compute({"atomic.glsl", "common.glsl", "p2g_common.glsl", "p2g_accumulate.cs.glsl"}).compile();
         p2g_apply_program.compute({"atomic.glsl", "common.glsl", "p2g_common.glsl", "p2g_apply.cs.glsl"}).compile();
@@ -118,11 +120,12 @@ struct Fluid {
         extrapolate_program.compute({"common.glsl", "extrapolate.cs.glsl"}).compile();
         set_vel_known_program.compute({"common.glsl", "set_vel_known.cs.glsl"}).compile();
         body_forces_program.compute({"common.glsl", "enforce_boundary.cs.glsl", "body_forces.cs.glsl"}).compile();
-        setup_grid_project_program.compute({"common.glsl", "setup_project.cs.glsl", "compute_divergence.cs.glsl", "build_a.cs.glsl"}).compile();
+        setup_grid_project_program.compute({"common.glsl","rand.glsl", "setup_project.cs.glsl", "compute_divergence.cs.glsl", "build_a.cs.glsl"}).compile();
         jacobi_iterate_program.compute({"common.glsl", "jacobi_iterate.cs.glsl"}).compile();
         pressure_to_guess_program.compute({"common.glsl", "pressure_to_guess.cs.glsl"}).compile();
         pressure_update_program.compute({"common.glsl", "pressure_update.cs.glsl"}).compile();
         particle_advect_program.compute({"common.glsl", "rand.glsl", "particle_advect.cs.glsl"}).compile();
+
         
         program.vertex({"particles.vs.glsl"}).fragment({"lighting.glsl", "particles.fs.glsl"}).compile();
         grid_program.vertex({"common.glsl", "grid.vs.glsl"}).geometry({"common.glsl", "grid.gs.glsl"}).fragment({"grid.fs.glsl"}).compile();
@@ -541,10 +544,22 @@ struct Fluid {
         particle_advect_program.disuse();
     }
 
+    void spawn_new(float dt)
+    {
+        ssbo_barrier();
+        spawn_new_program.use();
+        glUniform3fv(spawn_new_program.uniform_loc("bounds_min"), 1, glm::value_ptr(bounds_min));
+        glUniform3fv(spawn_new_program.uniform_loc("bounds_max"), 1, glm::value_ptr(bounds_max));
+        glUniform1f(spawn_new_program.uniform_loc("dt"),dt);
+        glDispatchCompute(particle_ssbo.length(),1,1);
+        spawn_new_program.disuse();
+    }
+
     void ssbo_barrier() {
         // https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glMemoryBarrier.xhtml
         glMemoryBarrier(GL_ALL_BARRIER_BITS);
     }
+
 
     void step() {
         const float dt = 0.02;
@@ -556,6 +571,7 @@ struct Fluid {
         pressure_update(dt);
         grid_to_particle();
         particle_advect(dt);
+        spawn_new(dt);
         // input_and_output();
     }
 

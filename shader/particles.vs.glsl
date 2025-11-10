@@ -19,6 +19,7 @@ void main() {
 
     vec3 particle_pos_view = (view * vec4(particle_pos, 1.0)).xyz;
     vec3 vertex_pos_view = particle_pos_view + vec3(circle_offset, 0) * radius;
+//    if(type==1){vertex_pos_view+=vec3(999.9,999.9,999.9);}
     gl_Position = projection * vec4(vertex_pos_view, 1.0);
     if (display_mode == 0) {
         color = particle_color;
@@ -27,6 +28,6 @@ void main() {
         color = vec4(vel * 0.5 + 0.5, 1.0);
     }
     if(type==1){
-        color = vec4(1.0,1.0,1.0,0.0);
+        color = vec4(1.0,1.0,1.0,1.0);
     }
 }

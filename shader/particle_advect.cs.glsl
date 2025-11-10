@@ -29,7 +29,7 @@ void main() {
     uint index = gl_WorkGroupID.x;
     // TODO: don't use explicit Oiler integration
     //This drains up the water
-    if (particle[index].pos.z <-0.6 && particle[index].pos.x < -0.6) {
+    if (particle[index].pos.z <-0.6 && particle[index].pos.x < -0.6 && particle[index].pos.y < -0.6) {
         particle[index].type=1;
     }
     particle[index].pos += particle[index].vel * dt;
