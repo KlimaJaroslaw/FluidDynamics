@@ -27,11 +27,7 @@ bool ray_sphere_isect(vec3 r0, vec3 rd, vec3 s0, float sr) {
 
 void main() {
     uint index = gl_WorkGroupID.x;
-    // TODO: don't use explicit Oiler integration
-    //This drains up the water
-    if (particle[index].pos.z <-0.6 && particle[index].pos.x < -0.6 && particle[index].pos.y < -0.6) {
-        particle[index].type=1;
-    }
+    // TODO: don't use explicit Euler integration
     particle[index].pos += particle[index].vel * dt;
 
 

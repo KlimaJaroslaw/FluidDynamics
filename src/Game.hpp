@@ -41,6 +41,8 @@ public:
     bool grid_visible = false;
     bool particles_visible = true;
     bool use_ssf = true;
+    bool drain_water = false;
+    bool add_water= false;
     int grid_display_mode = 0;
 
     Box box;
@@ -113,6 +115,15 @@ public:
         if (running || do_step) {
             do_step = false;
             fluid.step();
+            if (drain_water)
+            {
+                fluid.put_on_queue();
+            }
+            if (add_water)
+            {
+                fluid.read_queue();
+            }
+
             fluid.ssbo_barrier();
         }
 

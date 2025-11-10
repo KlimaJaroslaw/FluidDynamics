@@ -60,12 +60,20 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
         if (key == GLFW_KEY_F) {
             game->use_ssf = !game->use_ssf;
         }
+        if (key == GLFW_KEY_D)
+        {
+            game->drain_water = !game->drain_water;
+        }
+        if (key == GLFW_KEY_A)
+        {
+            game -> add_water = !game->add_water;
+        }
 
-        if (key == GLFW_KEY_PAGE_DOWN) {
+        if (key == GLFW_KEY_1) {
             game->fluid.pic_flip_blend = std::max(0.f, game->fluid.pic_flip_blend - 0.05f);
             std::cout << "PIC/FLIP blend " << game->fluid.pic_flip_blend << std::endl;
         }
-        if (key == GLFW_KEY_PAGE_UP) {
+        if (key == GLFW_KEY_2) {
             game->fluid.pic_flip_blend = std::min(1.f, game->fluid.pic_flip_blend + 0.05f);
             std::cout << "PIC/FLIP blend " << game->fluid.pic_flip_blend << std::endl;
         }

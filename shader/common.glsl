@@ -30,17 +30,23 @@ struct DebugLine {
     vec3 b;
 };
 
+struct Queue {
+    int val;
+};
+
 layout(std430, binding=0) restrict buffer ParticleBlock {
     Particle particle[];
 };
 
-// This is where this shit comes from
 layout(std430, binding=1) restrict buffer GridBlock {
     GridCell cell[];
 };
 
 layout(std430, binding=2) restrict buffer DebugLinesBlock {
     DebugLine debug_lines[];
+};
+layout(std430, binding=4) restrict buffer QueueBlock {
+    Queue queue[];
 };
 
 uniform ivec3 grid_dim;

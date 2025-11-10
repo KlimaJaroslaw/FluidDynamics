@@ -16,6 +16,7 @@
 #include "SSFBufferElement.hpp"
 #include "SSFRenderTexture.hpp"
 #include "Quad.hpp"
+#include "Queue.hpp"
 #include "util.hpp"
 #include "gfx/object.hpp"
 #include "gfx/program.hpp"
@@ -43,6 +44,7 @@ struct Fluid {
     gfx::Buffer viewport_rect{GL_ARRAY_BUFFER};
     gfx::Buffer particle_ssbo{GL_SHADER_STORAGE_BUFFER}; // particle data storage
     gfx::Buffer grid_ssbo{GL_SHADER_STORAGE_BUFFER}; // grid data storage
+    gfx::Buffer queue_ssbo{GL_SHADER_STORAGE_BUFFER}; //queue for incoming particles
     gfx::Buffer transfer_ssbo{GL_SHADER_STORAGE_BUFFER}; // p2g transfer storage buffer
     gfx::Buffer circle_verts{GL_ARRAY_BUFFER};
     gfx::Buffer debug_lines_ssbo{GL_SHADER_STORAGE_BUFFER};
@@ -64,7 +66,9 @@ struct Fluid {
     gfx::Program pressure_to_guess_program; // copy pressure to pressure_guess for pressure solve
     gfx::Program pressure_update_program; // update velocities from pressure gradient
     gfx::Program grid_to_particle_program; // transfer grid velocities to particles
-    gfx::Program spawn_new_program; //Spawns new particles from a source
+    gfx::Program put_on_queue_program; //Deactivates drained particles and puts them on a queue
+    gfx::Program read_queue_program; //Activates particles from source if they are on a queue
+    gfx::Program sum_up_queue_program; //sums up an array in log(n) time
 
     gfx::Program program; // program for particle rendering
     gfx::Program grid_program;
@@ -112,7 +116,9 @@ struct Fluid {
             .bind_attrib(debug_lines_ssbo, offsetof(DebugLine, b), sizeof(DebugLine), 3, GL_FLOAT, gfx::NOT_INSTANCED)
             .bind_attrib(debug_lines_ssbo, offsetof(DebugLine, color), sizeof(DebugLine), 4, GL_FLOAT, gfx::NOT_INSTANCED);
         
-        spawn_new_program.compute({"common.glsl","rand.glsl","spawn_new.cs.glsl"}).compile();
+        put_on_queue_program.compute({"common.glsl","put_on_queue.cs.glsl"}).compile();
+        read_queue_program.compute({"common.glsl","rand.glsl","read_queue.cs.glsl"}).compile();
+        sum_up_queue_program.compute({"common.glsl","sum_up_queue.cs.glsl"}).compile();
         reset_grid_program.compute({"common.glsl", "reset_grid.cs.glsl"}).compile();
         p2g_accumulate_program.compute({"atomic.glsl", "common.glsl", "p2g_common.glsl", "p2g_accumulate.cs.glsl"}).compile();
         p2g_apply_program.compute({"atomic.glsl", "common.glsl", "p2g_common.glsl", "p2g_apply.cs.glsl"}).compile();
@@ -125,6 +131,7 @@ struct Fluid {
         pressure_to_guess_program.compute({"common.glsl", "pressure_to_guess.cs.glsl"}).compile();
         pressure_update_program.compute({"common.glsl", "pressure_update.cs.glsl"}).compile();
         particle_advect_program.compute({"common.glsl", "rand.glsl", "particle_advect.cs.glsl"}).compile();
+
 
         
         program.vertex({"particles.vs.glsl"}).fragment({"lighting.glsl", "particles.fs.glsl"}).compile();
@@ -140,6 +147,7 @@ struct Fluid {
         std::vector<GridCell> initial_grid;
         std::vector<Particle> initial_particles;
         std::vector<P2GTransfer> initial_transfer;
+        std::vector<Queue> initial_queue;
         for (int gz = 0; gz < grid_dimensions.z; ++gz) {
             for (int gy = 0; gy < grid_dimensions.y; ++gy) {
                 for (int gx = 0; gx < grid_dimensions.x; ++gx) {
@@ -150,7 +158,7 @@ struct Fluid {
                     // It justs places particles when x is less then half
                     // TODO: add a way to make any fluid shape, also to make constant fluid flow
                     const glm::ivec3& d = grid_cell_dimensions;
-                    if (gx < d.x / 5 || gx > d.x *3/5) {
+                    if (gx < d.x / 2) {
                         initial_grid.emplace_back(GridCell{
                             cell_pos,
                             glm::vec3(0),
@@ -166,6 +174,7 @@ struct Fluid {
                                     glm::vec4(0.32,0.57,0.79,1.0),
                                     0
                                 });
+                                initial_queue.emplace_back(Queue());
                             }
                         }
                     } else {
@@ -190,7 +199,7 @@ struct Fluid {
         debug_lines_ssbo.bind_base(2).set_data(debug_lines); 
 
         transfer_ssbo.bind_base(3).set_data(initial_transfer, GL_DYNAMIC_COPY);
-
+        queue_ssbo.bind_base(4).set_data(initial_queue,GL_DYNAMIC_COPY);
         std::cout << "Size of debug lines buffer " << debug_lines_ssbo.length() << " (" << debug_lines_ssbo.size() << " bytes)" << std::endl;
     }
 
@@ -414,6 +423,7 @@ struct Fluid {
         }
     }
 
+    // This only works on CPU it seems, do not use
     void input_and_output()
     {
         auto grid = particle_ssbo.map_buffer<Particle>();
@@ -544,15 +554,32 @@ struct Fluid {
         particle_advect_program.disuse();
     }
 
-    void spawn_new(float dt)
+    void put_on_queue()
     {
         ssbo_barrier();
-        spawn_new_program.use();
-        glUniform3fv(spawn_new_program.uniform_loc("bounds_min"), 1, glm::value_ptr(bounds_min));
-        glUniform3fv(spawn_new_program.uniform_loc("bounds_max"), 1, glm::value_ptr(bounds_max));
-        glUniform1f(spawn_new_program.uniform_loc("dt"),dt);
+        put_on_queue_program.use();
         glDispatchCompute(particle_ssbo.length(),1,1);
-        spawn_new_program.disuse();
+        put_on_queue_program.disuse();
+    }
+    void read_queue()
+    {
+        //Why do i have to do this to sum up an array????
+        for (int i=0;i<std::log2(particle_ssbo.length());i++)
+        {
+            ssbo_barrier();
+            sum_up_queue_program.use();
+            glUniform1i(sum_up_queue_program.uniform_loc("power"),i);
+            glUniform1i(sum_up_queue_program.uniform_loc("limit"),50);
+            glDispatchCompute(particle_ssbo.length(),1,1);
+            sum_up_queue_program.disuse();
+        }
+        ssbo_barrier();
+        read_queue_program.use();
+        glUniform3fv(read_queue_program.uniform_loc("bounds_min"), 1, glm::value_ptr(bounds_min));
+        glUniform3fv(read_queue_program.uniform_loc("bounds_max"), 1, glm::value_ptr(bounds_max));
+        glUniform1i(read_queue_program.uniform_loc("limit"),50);
+        glDispatchCompute(particle_ssbo.length(),1,1);
+        read_queue_program.disuse();
     }
 
     void ssbo_barrier() {
@@ -571,7 +598,8 @@ struct Fluid {
         pressure_update(dt);
         grid_to_particle();
         particle_advect(dt);
-        spawn_new(dt);
+        // put_on_queue();
+        // read_queue();
         // input_and_output();
     }
 
