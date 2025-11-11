@@ -22,6 +22,7 @@ struct GridCell {
     float pressure_guess;
     float pressure;
     int vel_unknown;
+    int nType;
 };
 
 struct DebugLine {

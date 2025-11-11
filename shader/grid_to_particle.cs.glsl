@@ -51,7 +51,10 @@ vec3 lerp_old_vel(uint index, ivec3 component) {
                 + cell[get_grid_index(offset_clamped(base_coord, ivec3(1, 0, 1)))].old_vel * weights.x;
     vec3 vel_x4 = cell[get_grid_index(offset_clamped(base_coord, ivec3(0, 1, 1)))].old_vel * (1 - weights.x) 
                 + cell[get_grid_index(offset_clamped(base_coord, ivec3(1, 1, 1)))].old_vel * weights.x;
-    
+
+    if(cell[get_grid_index(offset_clamped(base_coord, ivec3(1, 0, 0)))].type==SOLID){
+
+    }
     // y interpolation
     vec3 vel_y1 = vel_x1 * (1 - weights.y) + vel_x2 * weights.y;
     vec3 vel_y2 = vel_x3 * (1 - weights.y) + vel_x4 * weights.y;

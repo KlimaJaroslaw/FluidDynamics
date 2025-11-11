@@ -11,7 +11,6 @@ void main() {
         return;
     }
     if (cell[index].type == SOLID) {
-        // invalid
         cell[index].pressure = 0;
         return;
     }

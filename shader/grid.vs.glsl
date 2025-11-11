@@ -5,6 +5,7 @@ layout (location=3) in float rhs;
 layout (location=4) in vec4 a;
 layout (location=5) in float pressure;
 layout (location=6) in int vel_unknown;
+layout (location=7) in int nType;
 
 flat out int vs_display_mode;
 flat out int vs_discard;
@@ -27,6 +28,7 @@ void main() {
         if (type == AIR) {vs_color = vec3(1.0, 0.0, 0.0);}
         if (type == SOLID) {vs_color = vec3(0.0, 1.0, 0.0);}
         if (type == FLUID) {vs_color = vec3(0.0, 0.0, 1.0);}
+        if (nType != 0 ){vs_color = vec3(1.0,1.0,0.0);}
     }
     if (display_mode == 1) {
         vs_color = vec3(abs(vel));

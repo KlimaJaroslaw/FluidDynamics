@@ -9,6 +9,36 @@ void main() {
 
     cell[index].old_vel = cell[index].vel;
 
+    if(cell[index].type == SOLID)
+    {
+        if (grid_pos.x > 0) {
+            uint j = get_grid_index(grid_pos + ivec3(-1, 0, 0));
+            if(cell[j].type!=SOLID){cell[j].nType=1;}
+        }
+        if (grid_pos.y > 0) {
+            uint j = get_grid_index(grid_pos + ivec3(0, -1, 0));
+            if(cell[j].type!=SOLID){cell[j].nType=1;}
+        }
+        if (grid_pos.z > 0) {
+            uint j = get_grid_index(grid_pos + ivec3(0, 0, -1));
+            if(cell[j].type!=SOLID){cell[j].nType=1;}
+        }
+
+        if (grid_pos.x < grid_dim.x - 2) {
+            uint j = get_grid_index(grid_pos + ivec3(1, 0, 0));
+            if(cell[j].type!=SOLID){cell[j].nType=1;}
+        }
+        if (grid_pos.y < grid_dim.y - 2) {
+            uint j = get_grid_index(grid_pos + ivec3(0, 1, 0));
+            if(cell[j].type!=SOLID){cell[j].nType=1;}
+        }
+        if (grid_pos.z < grid_dim.z - 2) {
+            uint j = get_grid_index(grid_pos + ivec3(0, 0, 1));
+            if(cell[j].type!=SOLID){cell[j].nType=1;}
+        }
+    }
+
+
     if (grid_pos.y < grid_dim.y - 1 && grid_pos.z < grid_dim.z - 1)
         cell[index].vel.x += body_force.x * dt;
     if (grid_pos.x < grid_dim.x - 1 && grid_pos.z < grid_dim.z - 1)

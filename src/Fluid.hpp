@@ -110,7 +110,8 @@ struct Fluid {
            .bind_attrib(grid_ssbo, offsetof(GridCell, rhs), sizeof(GridCell), 1, GL_FLOAT, gfx::NOT_INSTANCED)
            .bind_attrib(grid_ssbo, offsetof(GridCell, a_diag), sizeof(GridCell), 4, GL_FLOAT, gfx::NOT_INSTANCED)
            .bind_attrib(grid_ssbo, offsetof(GridCell, pressure), sizeof(GridCell), 1, GL_FLOAT, gfx::NOT_INSTANCED)
-           .bind_attrib(grid_ssbo, offsetof(GridCell, vel_unknown), sizeof(GridCell), 1, GL_INT, gfx::NOT_INSTANCED);
+           .bind_attrib(grid_ssbo, offsetof(GridCell, vel_unknown), sizeof(GridCell), 1, GL_INT, gfx::NOT_INSTANCED)
+            .bind_attrib(grid_ssbo,offsetof(GridCell, nType),sizeof(GridCell), 1, GL_INT, gfx::NOT_INSTANCED);
 
         debug_lines_vao.bind_attrib(debug_lines_ssbo, offsetof(DebugLine, a), sizeof(DebugLine), 3, GL_FLOAT, gfx::NOT_INSTANCED)
             .bind_attrib(debug_lines_ssbo, offsetof(DebugLine, b), sizeof(DebugLine), 3, GL_FLOAT, gfx::NOT_INSTANCED)
@@ -141,6 +142,52 @@ struct Fluid {
         ssf_spheres_program.vertex({"particles.vs.glsl"}).fragment({"common.glsl", "ssf_spheres.fs.glsl"}).compile();
         ssf_smooth_program.vertex({"screen_quad.vs.glsl"}).fragment({"ssf_smooth.fs.glsl"}).compile();
         ssf_shade_program.vertex({"screen_quad.vs.glsl"}).fragment({"lighting.glsl", "ssf_shade.fs.glsl"}).compile();
+    }
+
+    inline int idx(int gx, int gy, int gz)
+    {
+        return gx + gy * grid_cell_dimensions.x + gz * grid_cell_dimensions.x * grid_cell_dimensions.y;
+    }
+    void add_neighbors(std::vector<GridCell>& grid)
+    {
+        int nt[grid.size()];
+        for (int i=0;i<grid.size();i++){nt[i]=0;}
+        for (int gz = 0; gz < grid_dimensions.z; ++gz)
+        {
+            for (int gy = 0; gy < grid_dimensions.y; ++gy)
+            {
+                for (int gx = 0; gx < grid_dimensions.x; ++gx)
+                {
+                    int i = idx(gx, gy, gz);
+                    if (grid[i].type == GRID_SOLID)
+                    {
+                        if (gx > 0 && grid[idx(gx - 1, gy, gz)].type != GRID_SOLID)
+                            nt[idx(gx - 1, gy, gz)] = 1;
+
+
+                        if (gx < grid_dimensions.x - 1 && grid[idx(gx + 1, gy, gz)].type != GRID_SOLID)
+                            nt[idx(gx + 1, gy, gz)] = 2;
+
+
+                        if (gy > 0 && grid[idx(gx, gy - 1, gz)].type != GRID_SOLID)
+                            nt[idx(gx, gy-1, gz)] = 3;
+
+
+                        if (gy < grid_dimensions.y - 1 && grid[idx(gx, gy + 1, gz)].type != GRID_SOLID)
+                            nt[idx(gx, gy+1, gz)] = 4;
+
+
+                        if (gz > 0 && grid[idx(gx, gy, gz - 1)].type != GRID_SOLID)
+                            nt[idx(gx, gy, gz-1)] = 5;
+
+
+                        if (gz < grid_dimensions.z - 1 && grid[idx(gx, gy, gz + 1)].type != GRID_SOLID)
+                            nt[idx(gx, gy, gz+1)] = 6;
+                    }
+                }
+            }
+        }
+        for (int i=0;i<grid.size();i++){grid[i].nType=nt[i];}
     }
 
     void init_ssbos() {
@@ -177,7 +224,16 @@ struct Fluid {
                                 initial_queue.emplace_back(Queue());
                             }
                         }
-                    } else {
+                    }
+                    else if (gx > d.x*3/5 && gx < d.x*4/5 && gy > d.y * 3/5 && gy < d.y * 4/5)
+                    {
+                        initial_grid.emplace_back(GridCell{
+                            cell_pos,
+                            glm::vec3(0),
+                            GRID_SOLID
+                        });
+                    }
+                    else {
                         initial_grid.emplace_back(GridCell{
                             cell_pos,
                             glm::vec3(0),
@@ -187,6 +243,7 @@ struct Fluid {
                 }
             }
         }
+        // add_neighbors(initial_grid);
         particle_ssbo.bind_base(0).set_data(initial_particles, GL_DYNAMIC_COPY);
         grid_ssbo.bind_base(1).set_data(initial_grid, GL_DYNAMIC_COPY);
         std::cerr << "Cell count: " << initial_grid.size() << std::endl;
