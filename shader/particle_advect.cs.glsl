@@ -28,16 +28,30 @@ bool ray_sphere_isect(vec3 r0, vec3 rd, vec3 s0, float sr) {
 void main() {
     uint index = gl_WorkGroupID.x;
     // TODO: don't use explicit Euler integration
+    ivec3 c1 = get_grid_coord(particle[index].pos,ivec3(1,1,1));
     particle[index].pos += particle[index].vel * dt;
 
 
     if(particle[index].type==0){
         // jitter particle positions to prevent squishing
+        ivec3 c2 = get_grid_coord(particle[index].pos,ivec3(1,1,1));
+
+        if (cell[get_grid_index(c2)].type==SOLID)
+        {
+            ivec3 n = c2-c1;
+            particle[index].pos = get_world_coord(c1,ivec3(1,1,1));
+            vec3 v_old = particle[index].vel;
+            particle[index].vel = v_old - (v_old*n)*n;
+        }
+
+
         const float jitter = 0.005;
         particle[index].pos += hash3(floatBitsToInt(particle[index].pos)) * jitter - 0.5 * jitter;
 
         vec3 epsilon = vec3(0.00001);//cell_size - 0.01;
         particle[index].pos = clamp(particle[index].pos, bounds_min + epsilon, bounds_max - epsilon);
+
+
 
         bool hit = ray_sphere_isect(mouse_pos, normalize(mouse_pos - eye), particle[index].pos, mouse_range);
         if (hit)

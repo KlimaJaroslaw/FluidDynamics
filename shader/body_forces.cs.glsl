@@ -38,7 +38,6 @@ void main() {
         }
     }
 
-
     if (grid_pos.y < grid_dim.y - 1 && grid_pos.z < grid_dim.z - 1)
         cell[index].vel.x += body_force.x * dt;
     if (grid_pos.x < grid_dim.x - 1 && grid_pos.z < grid_dim.z - 1)

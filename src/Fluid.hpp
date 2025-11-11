@@ -225,7 +225,7 @@ struct Fluid {
                             }
                         }
                     }
-                    else if (gx > d.x*3/5 && gx < d.x*4/5 && gy > d.y * 3/5 && gy < d.y * 4/5)
+                    else if (gx > d.x*3/5)
                     {
                         initial_grid.emplace_back(GridCell{
                             cell_pos,
@@ -646,7 +646,7 @@ struct Fluid {
 
 
     void step() {
-        const float dt = 0.02;
+        const float dt = 0.01;
         particle_to_grid();
         // extrapolate();
         apply_body_forces(dt);

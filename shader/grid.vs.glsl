@@ -28,7 +28,7 @@ void main() {
         if (type == AIR) {vs_color = vec3(1.0, 0.0, 0.0);}
         if (type == SOLID) {vs_color = vec3(0.0, 1.0, 0.0);}
         if (type == FLUID) {vs_color = vec3(0.0, 0.0, 1.0);}
-        if (nType != 0 ){vs_color = vec3(1.0,1.0,0.0);}
+        if(nType==1){vs_color=vec3(1.0,1.0,0.0);}
     }
     if (display_mode == 1) {
         vs_color = vec3(abs(vel));
