@@ -14,7 +14,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(LIBS glad glfw glm)
 add_executable(fluid
         src/Drain.hpp
-        src/Queue.hpp)
+        src/Queue.hpp
+        src/shapes/Shapes.hpp
+        src/shapes/Mesh.hpp
+        src/shapes/Ramp.cpp
+        src/shapes/Ramp.hpp)
 add_subdirectory(src)
 target_link_libraries(fluid ${LIBS})
 
