@@ -21,6 +21,7 @@
 #include "gfx/object.hpp"
 #include "gfx/program.hpp"
 #include "gfx/rendertexture.hpp"
+#include "shapes/Ramp.hpp"
 
 struct Fluid {
     const int num_circle_vertices = 16; // circle detail for particle rendering
@@ -205,7 +206,7 @@ struct Fluid {
                     // It justs places particles when x is less then half
                     // TODO: add a way to make any fluid shape, also to make constant fluid flow
                     const glm::ivec3& d = grid_cell_dimensions;
-                    if (gx < d.x / 2) {
+                    if (gx < d.x*0.5) {
                         initial_grid.emplace_back(GridCell{
                             cell_pos,
                             glm::vec3(0),
@@ -225,14 +226,14 @@ struct Fluid {
                             }
                         }
                     }
-                    else if (gx > d.x*3/5)
-                    {
-                        initial_grid.emplace_back(GridCell{
-                            cell_pos,
-                            glm::vec3(0),
-                            GRID_SOLID
-                        });
-                    }
+                    // else if (gx > d.x*3/5 && gy < d.y*2/5)
+                    // {
+                    //     initial_grid.emplace_back(GridCell{
+                    //         cell_pos,
+                    //         glm::vec3(0),
+                    //         GRID_SOLID
+                    //     });
+                    // }
                     else {
                         initial_grid.emplace_back(GridCell{
                             cell_pos,
@@ -243,7 +244,21 @@ struct Fluid {
                 }
             }
         }
-        // add_neighbors(initial_grid);
+        // std::unique_ptr<IShape> shape = std::make_unique<Ramp>();
+        // auto points1 = shape->to_grid(1,1,1,24);
+        // for (auto point : points1)
+        // {
+        //     glm::vec3 pos = point-glm::vec3(0.5,0.5,0.5);
+        //     glm::ivec3 gCoord = get_grid_coord(pos);
+        //     uint ind = get_grid_index(gCoord);
+        //     std::cout << "X: " << gCoord.x << "Y: " << gCoord.y << "Z: " << gCoord.z << std::endl;
+        //
+        //     initial_grid[ind]=GridCell{
+        //                     pos,
+        //                     glm::vec3(0),
+        //                     GRID_SOLID};
+        // }
+        add_neighbors(initial_grid);
         particle_ssbo.bind_base(0).set_data(initial_particles, GL_DYNAMIC_COPY);
         grid_ssbo.bind_base(1).set_data(initial_grid, GL_DYNAMIC_COPY);
         std::cerr << "Cell count: " << initial_grid.size() << std::endl;
