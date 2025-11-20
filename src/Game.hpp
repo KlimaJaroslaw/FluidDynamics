@@ -16,7 +16,7 @@
 #include "gfx/program.hpp"
 #include "gfx/rendertexture.hpp"
 #include "Box.hpp"
-#include "Fluid.hpp"
+#include "Fluid.cpp"
 #include "Quad.hpp"
 #include "util.hpp"
 
@@ -56,7 +56,7 @@ public:
     void init() {
         srand(time(0));
         fluid.init();
-        texture_copy_program.vertex({"screen_quad.vs.glsl"}).fragment({"texture_copy.fs.glsl"}).compile();
+        texture_copy_program.vertex({"RenderingShaders/screen_quad.vs.glsl"}).fragment({"RenderingShaders/texture_copy.fs.glsl"}).compile();
     }
 
     void resize(glm::uint w, glm::uint h) {

@@ -18,7 +18,9 @@ add_executable(fluid
         src/shapes/Shapes.hpp
         src/shapes/Mesh.hpp
         src/shapes/Ramp.cpp
-        src/shapes/Ramp.hpp)
+        src/shapes/Ramp.hpp
+        src/fluid.h
+)
 add_subdirectory(src)
 target_link_libraries(fluid ${LIBS})
 

@@ -20,7 +20,7 @@ struct Box {
         };
         vbo.set_data(data);
         vao.bind_attrib(vbo, 3, GL_FLOAT);
-        program.vertex({"box.vs.glsl"}).geometry({"box.gs.glsl"}).fragment({"lighting.glsl", "box.fs.glsl"}).compile();
+        program.vertex({"RenderingShaders/box.vs.glsl"}).geometry({"RenderingShaders/box.gs.glsl"}).fragment({"RenderingShaders/lighting.glsl", "RenderingShaders/box.fs.glsl"}).compile();
     }
 
     void draw(const glm::mat4& projection, const glm::mat4& view, const glm::vec3& eye) {
