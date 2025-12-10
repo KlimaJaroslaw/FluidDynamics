@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <vector>
 #include <glad/glad.h>
+#include <glm/glm.hpp>
 
 namespace gfx {
 static constexpr glm::uint NOT_INSTANCED = 0;

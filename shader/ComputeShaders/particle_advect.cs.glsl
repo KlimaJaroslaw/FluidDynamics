@@ -45,14 +45,6 @@ void main() {
 
         ivec3 c2 = get_grid_coord(particle[index].pos,ivec3(1,1,1));
 
-        if (cell[get_grid_index(c2)].type==SOLID)
-        {
-            ivec3 n = c2-c1;
-            particle[index].pos = get_world_coord(c1,ivec3(1,1,1));
-            vec3 v_old = particle[index].vel;
-            particle[index].vel = v_old - 2*(v_old*n)*n;
-        }
-
         bool hit = ray_sphere_isect(mouse_pos, normalize(mouse_pos - eye), particle[index].pos, mouse_range);
         if (hit)
         particle[index].vel += mouse_vel;

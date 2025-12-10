@@ -1,6 +1,7 @@
 #include "fluid.h"
 
 
+
 void Fluid::init() {
     init_ssbos();
 
@@ -25,8 +26,7 @@ void Fluid::init() {
        .bind_attrib(grid_ssbo, offsetof(GridCell, rhs), sizeof(GridCell), 1, GL_FLOAT, gfx::NOT_INSTANCED)
        .bind_attrib(grid_ssbo, offsetof(GridCell, a_diag), sizeof(GridCell), 4, GL_FLOAT, gfx::NOT_INSTANCED)
        .bind_attrib(grid_ssbo, offsetof(GridCell, pressure), sizeof(GridCell), 1, GL_FLOAT, gfx::NOT_INSTANCED)
-       .bind_attrib(grid_ssbo, offsetof(GridCell, vel_unknown), sizeof(GridCell), 1, GL_INT, gfx::NOT_INSTANCED)
-        .bind_attrib(grid_ssbo,offsetof(GridCell, nType),sizeof(GridCell), 1, GL_INT, gfx::NOT_INSTANCED);
+       .bind_attrib(grid_ssbo, offsetof(GridCell, vel_unknown), sizeof(GridCell), 1, GL_INT, gfx::NOT_INSTANCED);
 
     debug_lines_vao.bind_attrib(debug_lines_ssbo, offsetof(DebugLine, a), sizeof(DebugLine), 3, GL_FLOAT, gfx::NOT_INSTANCED)
         .bind_attrib(debug_lines_ssbo, offsetof(DebugLine, b), sizeof(DebugLine), 3, GL_FLOAT, gfx::NOT_INSTANCED)
@@ -63,47 +63,8 @@ inline int Fluid::idx(int gx, int gy, int gz)
 {
     return gx + gy * grid_cell_dimensions.x + gz * grid_cell_dimensions.x * grid_cell_dimensions.y;
 }
-void Fluid::addNeighbors(std::vector<GridCell>& grid)
-{
-    int nt[grid.size()];
-    for (int i=0;i<grid.size();i++){nt[i]=0;}
-    for (int gz = 0; gz < grid_dimensions.z; ++gz)
-    {
-        for (int gy = 0; gy < grid_dimensions.y; ++gy)
-        {
-            for (int gx = 0; gx < grid_dimensions.x; ++gx)
-            {
-                int i = idx(gx, gy, gz);
-                if (grid[i].type == GRID_SOLID)
-                {
-                    if (gx > 0 && grid[idx(gx - 1, gy, gz)].type != GRID_SOLID)
-                        nt[idx(gx - 1, gy, gz)] = 1;
 
 
-                    if (gx < grid_dimensions.x - 1 && grid[idx(gx + 1, gy, gz)].type != GRID_SOLID)
-                        nt[idx(gx + 1, gy, gz)] = 2;
-
-
-                    if (gy > 0 && grid[idx(gx, gy - 1, gz)].type != GRID_SOLID)
-                        nt[idx(gx, gy-1, gz)] = 3;
-
-
-                    if (gy < grid_dimensions.y - 1 && grid[idx(gx, gy + 1, gz)].type != GRID_SOLID)
-                        nt[idx(gx, gy+1, gz)] = 4;
-
-
-                    if (gz > 0 && grid[idx(gx, gy, gz - 1)].type != GRID_SOLID)
-                        nt[idx(gx, gy, gz-1)] = 5;
-
-
-                    if (gz < grid_dimensions.z - 1 && grid[idx(gx, gy, gz + 1)].type != GRID_SOLID)
-                        nt[idx(gx, gy, gz+1)] = 6;
-                }
-            }
-        }
-    }
-    for (int i=0;i<grid.size();i++){grid[i].nType=nt[i];}
-}
 
 void Fluid::init_ssbos() {
     std::vector<GridCell> initial_grid;
@@ -150,21 +111,6 @@ void Fluid::init_ssbos() {
             }
         }
     }
-    // std::unique_ptr<IShape> shape = std::make_unique<Ramp>();
-    // auto points1 = shape->to_grid(1,1,1,24);
-    // for (auto point : points1)
-    // {
-    //     glm::vec3 pos = point-glm::vec3(0.5,0.5,0.5);
-    //     glm::ivec3 gCoord = get_grid_coord(pos);
-    //     uint ind = get_grid_index(gCoord);
-    //     std::cout << "X: " << gCoord.x << "Y: " << gCoord.y << "Z: " << gCoord.z << std::endl;
-    //
-    //     initial_grid[ind]=GridCell{
-    //                     pos,
-    //                     glm::vec3(0),
-    //                     GRID_SOLID};
-    // }
-    addNeighbors(initial_grid);
     particle_ssbo.bind_base(0).set_data(initial_particles, GL_DYNAMIC_COPY);
     grid_ssbo.bind_base(1).set_data(initial_grid, GL_DYNAMIC_COPY);
     std::cerr << "Cell count: " << initial_grid.size() << std::endl;
@@ -175,7 +121,6 @@ void Fluid::init_ssbos() {
     debug_lines.push_back(DebugLine({0, 0, 0}, {0, 0.1, 0}, {0, 1, 0, 1})); // y axis
     debug_lines.push_back(DebugLine({0, 0, 0}, {0, 0, 0.1}, {0, 0, 1, 1})); // z axis
     debug_lines_ssbo.bind_base(2).set_data(debug_lines);
-
     transfer_ssbo.bind_base(3).set_data(initial_transfer, GL_DYNAMIC_COPY);
     queue_ssbo.bind_base(4).set_data(initial_queue,GL_DYNAMIC_COPY);
     std::cout << "Size of debug lines buffer " << debug_lines_ssbo.length() << " (" << debug_lines_ssbo.size() << " bytes)" << std::endl;
@@ -394,7 +339,7 @@ void Fluid::ssbo_barrier() {
 }
 
 void Fluid::step() {
-    const float dt = 0.01;
+    const float dt = 0.02;
     particle_to_grid();
     // extrapolate();
     apply_body_forces(dt);
@@ -416,6 +361,8 @@ void Fluid::draw_particles(const glm::mat4& projection, const glm::mat4& view, c
     vao.unbind();
     program.disuse();
 }
+
+
 
 void Fluid::draw_particles_ssf(const gfx::RenderTexture& scene_texture, const glm::mat4& projection, const glm::mat4& view, const glm::vec4& viewport) {
         constexpr static GLenum ssf_draw_buffers[]{GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};

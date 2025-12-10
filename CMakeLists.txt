@@ -20,10 +20,11 @@ add_executable(fluid
         src/shapes/Ramp.cpp
         src/shapes/Ramp.hpp
         src/fluid.h
+        src/Mesh.cpp
+        src/Mesh.h
 )
 add_subdirectory(src)
 target_link_libraries(fluid ${LIBS})
-
 # googletest and tests
 #add_subdirectory(googletest)
 #add_executable(fluid_tests test/fluid_tests.cpp)
@@ -35,7 +36,6 @@ add_custom_target(copy-shader-files ALL
 
 # add glm
 add_subdirectory(glm)
-
 # add glad
 add_subdirectory(glad)
 
@@ -46,7 +46,8 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(glfw)
 
 include_directories(Eigen)
-
+include_directories(fcpw)
+include_directories(tinyobj)
 # add eigen
 #find_package (Eigen3 REQUIRED NO_MODULE)
 #target_link_libraries (fluid Eigen3::Eigen)

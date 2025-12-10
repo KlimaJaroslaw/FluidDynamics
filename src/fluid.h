@@ -32,10 +32,11 @@
 #include "shapes/Ramp.hpp"
 
 struct Fluid {
-    const int num_circle_vertices = 16; // circle detail for particle rendering
+    const int num_circle_vertices = 8; // circle detail for particle rendering
 
-    const int particle_density = 16;
-    const int grid_size = 24;
+    const int particle_density = 2;
+    const int grid_size = 32;
+    int num_mesh_vertices;
     const glm::ivec3 grid_dimensions{grid_size + 1, grid_size + 1, grid_size + 1};
     const glm::ivec3 grid_cell_dimensions{grid_size, grid_size, grid_size};
     const glm::vec3 bounds_min{-1, -1, -1};
@@ -124,9 +125,10 @@ struct Fluid {
     void step();
 
     void draw_particles(const glm::mat4& projection, const glm::mat4& view, const glm::vec4& viewport);
+    void draw_mesh(const glm::mat4& projection, const glm::mat4& view, const glm::vec4& viewport);
     void draw_particles_ssf(const gfx::RenderTexture& scene_texture, const glm::mat4& projection, const glm::mat4& view, const glm::vec4& viewport);
     void draw_grid(const glm::mat4& projection, const glm::mat4& view, int display_mode);
-    void draw_debug_lines(const glm::mat4& projection, const glm::mat4& view)''
+    void draw_debug_lines(const glm::mat4& projection, const glm::mat4& view);
 };
 
 #endif //GL_PIC_FLUID_FLUID_H

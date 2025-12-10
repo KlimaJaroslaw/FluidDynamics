@@ -17,8 +17,13 @@
 #include "gfx/rendertexture.hpp"
 #include "Box.hpp"
 #include "Fluid.cpp"
+#include "Mesh.h"
 #include "Quad.hpp"
 #include "util.hpp"
+
+
+
+
 
 class Game {
 public:
@@ -46,12 +51,15 @@ public:
     int grid_display_mode = 0;
 
     Box box;
-
+    Mesh mesh;
     gfx::RenderTexture scene_texture;
     gfx::Program texture_copy_program;
     Quad quad;
 
-    Game(GLFWwindow* window) : window(window) {}
+    Game(GLFWwindow* window) : window(window)
+    {
+    }
+
 
     void init() {
         srand(time(0));
@@ -75,6 +83,12 @@ public:
             mouse_right_drag_start = mouse_pos;
         }
     }
+
+
+
+
+
+
 
     void update() {
         const double t = glfwGetTime();
@@ -141,7 +155,8 @@ public:
             glEnable(GL_BLEND);
             glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 
-            box.draw(projection, view, eye);
+            // box.draw(projection, view, eye);
+            mesh.Draw(projection,view,eye);
             if (!use_ssf && particles_visible)
                 fluid.draw_particles(projection, view, viewport);
             if (grid_visible)
