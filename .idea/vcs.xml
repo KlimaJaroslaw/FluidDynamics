@@ -2,5 +2,12 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/fcpw" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/fcpw/deps/eigen-git-mirror" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/fcpw/deps/enoki" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/fcpw/deps/enoki/ext/cub" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/fcpw/deps/enoki/ext/pybind11" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/fcpw/deps/enoki/ext/pybind11/tools/clang" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/fcpw/deps/slang-rhi" vcs="Git" />
   </component>
 </project>

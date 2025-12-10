@@ -18,14 +18,22 @@ struct alignas(16) Vertex {
     float u, v;       // TexCoords
 };
 
+struct MeshData {
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
+};
+
 class Mesh
 {
 public:
     gfx::Buffer vbo{GL_ARRAY_BUFFER};
+    gfx::Buffer ebo{GL_ELEMENT_ARRAY_BUFFER};
     gfx::VAO vao;
     gfx::Program program;
-    int vertexCount;
+    int indicesCount;
     std::vector<Vertex> LoadModel(const std::string& inputfile);
+    MeshData LoadModelIndexed(const std::string& inputfile);
+    void CreateSDF();
     Mesh();
     void Draw(const glm::mat4& projection, const glm::mat4& view, const glm::vec3& eye);
 };

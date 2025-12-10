@@ -11,6 +11,7 @@ struct GridCell {
     alignas(16) glm::vec3 vel; // velocity component at each of three faces on cell cube (not a real vector)
     alignas(4)  float rhs = 0; // negative divergence for pressure solve
 
+
     alignas(16) glm::vec3 old_vel; // old velocity for FLIP update
 
     // elements of A matrix in pressure solve
@@ -22,6 +23,7 @@ struct GridCell {
     alignas(4)  float pressure_guess = 0;
     alignas(4)  float pressure = 0;
     alignas(4)  int vel_unknown = 1;
-
-    GridCell(const glm::vec3& pos, const glm::vec3& vel, int type) : pos(pos), type(type), vel(vel), old_vel(vel) {}
+    alignas(4)  float dist;
+    alignas(16) glm::vec3 grad;
+    GridCell(const glm::vec3& pos, const glm::vec3& vel, int type, float dist, glm::vec3& grad) : pos(pos), type(type), vel(vel),dist(dist),grad(grad), old_vel(vel) {}
 };

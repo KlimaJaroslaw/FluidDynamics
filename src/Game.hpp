@@ -156,11 +156,12 @@ public:
             glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 
             // box.draw(projection, view, eye);
-            mesh.Draw(projection,view,eye);
+
             if (!use_ssf && particles_visible)
                 fluid.draw_particles(projection, view, viewport);
             if (grid_visible)
                 fluid.draw_grid(projection, view, grid_display_mode);
+            mesh.Draw(projection,view,eye);
         scene_texture.unbind_framebuffer();
 
         // copy scene buffer to screen

@@ -14,6 +14,11 @@ void main() {
     if (p2g_transfer[index].weight_w != 0)
         cell[index].vel.z = getAtomicFloat(p2g_transfer[index].w) / getAtomicFloat(p2g_transfer[index].weight_w);
 
+//    if(cell[index].dist<0){
+//        cell[index].vel.x = 0;
+//        cell[index].vel.y = 0;
+//        cell[index].vel.z = 0;
+//    }
     p2g_transfer[index].u = 0;
     p2g_transfer[index].v = 0;
     p2g_transfer[index].w = 0;

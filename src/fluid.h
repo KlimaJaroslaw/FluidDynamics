@@ -96,6 +96,7 @@ struct Fluid {
     Quad quad;
     Fluid() {}
 
+    std::pair<std::vector<float>,std::vector<glm::vec3>> CreateSDF();
     void init();
     inline int idx(int gx, int gy, int gz);
     void addNeighbors(std::vector<GridCell>& grid);

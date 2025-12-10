@@ -22,6 +22,8 @@ struct GridCell {
     float pressure_guess;
     float pressure;
     int vel_unknown;
+    float dist;
+    vec3 grad;
 };
 
 struct DebugLine {
@@ -89,5 +91,3 @@ ivec3 offset_clamped(ivec3 base_coord, ivec3 dimension_offset) {
         max_size.z = grid_dim.z;
     return clamp(base_coord + dimension_offset, ivec3(0), max_size - ivec3(1));
 }
-
-

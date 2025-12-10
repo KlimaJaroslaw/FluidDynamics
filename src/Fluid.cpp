@@ -1,12 +1,86 @@
 #include "fluid.h"
+#include <igl/signed_distance.h>
+#include <igl/read_triangle_mesh.h>
+#include <Eigen/Core>
+using namespace Eigen;
+std::pair<std::vector<float>,std::vector<glm::vec3>> Fluid::CreateSDF()
+{
+    MatrixXd V;
+    MatrixXi F;
+    if (!igl::read_triangle_mesh("cat.obj", V, F)) {
+        std::cout << "Nie udało się wczytać pliku." << std::endl;
+    }
+
+    int res_x =grid_size;
+    int res_y = grid_size;
+    int res_z = grid_size;
+
+    Eigen::RowVector3d min_point = V.colwise().minCoeff();
+    Eigen::RowVector3d max_point = V.colwise().maxCoeff();
+
+    Eigen::RowVector3d center = (min_point + max_point) / 2.0;
+
+    V.rowwise() -= center;
+    RowVector3d lengths = max_point - min_point;
+    double max_len = lengths.maxCoeff();
+
+    // Zabezpieczenie przed dzieleniem przez 0 (jak w LoadModelIndexed)
+    double scale_factor = (max_len > 0) ? (2.0 / max_len) : 1.0;
+
+    V *= scale_factor;
+    V.rowwise() -= RowVector3d(0.0,1.0,0.0);
+
+    min_point = RowVector3d(-1.0,-1.0,-1.0);
+    max_point = RowVector3d(1.0,1.0,1.0);
+    RowVector3d grid_dims = max_point - min_point;
+    double step_x = grid_dims(0) / (res_x - 1);
+    double step_y = grid_dims(1) / (res_y - 1);
+    double step_z = grid_dims(2) / (res_z - 1);
+
+    MatrixXd P(res_x * res_y * res_z, 3);
+
+    int iter = 0;
+    for (int z = 0; z < res_z; ++z) {
+        for (int y = 0; y < res_y; ++y) {
+            for (int x = 0; x < res_x; ++x) {
+                P(iter, 0) = min_point(0) + x * step_x;
+                P(iter, 1) = min_point(1) + y * step_y;
+                P(iter, 2) = min_point(2) + z * step_z;
+                iter++;
+            }
+        }
+    }
+
+    VectorXd S;
+    VectorXi I;
+    MatrixXd C;
+    MatrixXd N;
+
+    igl::signed_distance(P, V, F, igl::SIGNED_DISTANCE_TYPE_PSEUDONORMAL, S, I, C, N);
+    std::vector<glm::vec3> gradients(N.rows());
+
+    for (int i = 0; i < N.rows(); ++i) {
+        gradients[i] = glm::vec3(
+            static_cast<float>(N(i, 0)),
+            static_cast<float>(N(i, 1)),
+            static_cast<float>(N(i, 2))
+        );
+    }
+    std::cout << "AAA" << std::endl;
+    std::vector<float> distances(S.rows());
+    for (int i = 0; i < S.rows(); ++i) {
+        distances[i] = static_cast<float>(S(i, 0));
+    }
+    std::cout << "AAA" << std::endl;
+    return std::pair(distances,gradients);
+}
 
 
 
 void Fluid::init() {
     init_ssbos();
 
-    // graphics initialization
-    // circle vertices (for triangle fan)
+
     std::vector<glm::vec2> circle;
     for (int i = 0; i < num_circle_vertices; ++i) {
         const float f = static_cast<float>(i) / num_circle_vertices * glm::pi<float>() * 2.0;
@@ -26,7 +100,9 @@ void Fluid::init() {
        .bind_attrib(grid_ssbo, offsetof(GridCell, rhs), sizeof(GridCell), 1, GL_FLOAT, gfx::NOT_INSTANCED)
        .bind_attrib(grid_ssbo, offsetof(GridCell, a_diag), sizeof(GridCell), 4, GL_FLOAT, gfx::NOT_INSTANCED)
        .bind_attrib(grid_ssbo, offsetof(GridCell, pressure), sizeof(GridCell), 1, GL_FLOAT, gfx::NOT_INSTANCED)
-       .bind_attrib(grid_ssbo, offsetof(GridCell, vel_unknown), sizeof(GridCell), 1, GL_INT, gfx::NOT_INSTANCED);
+       .bind_attrib(grid_ssbo, offsetof(GridCell, vel_unknown), sizeof(GridCell), 1, GL_INT, gfx::NOT_INSTANCED)
+       .bind_attrib(grid_ssbo,offsetof(GridCell,dist),sizeof(GridCell),1,GL_FLOAT,gfx::NOT_INSTANCED)
+       .bind_attrib(grid_ssbo,offsetof(GridCell,grad),sizeof(GridCell),3,GL_FLOAT,gfx::NOT_INSTANCED);
 
     debug_lines_vao.bind_attrib(debug_lines_ssbo, offsetof(DebugLine, a), sizeof(DebugLine), 3, GL_FLOAT, gfx::NOT_INSTANCED)
         .bind_attrib(debug_lines_ssbo, offsetof(DebugLine, b), sizeof(DebugLine), 3, GL_FLOAT, gfx::NOT_INSTANCED)
@@ -71,6 +147,10 @@ void Fluid::init_ssbos() {
     std::vector<Particle> initial_particles;
     std::vector<P2GTransfer> initial_transfer;
     std::vector<Queue> initial_queue;
+    std::pair<std::vector<float>,std::vector<glm::vec3>> SDF = CreateSDF();
+    std::vector<float> distances = SDF.first;
+    for (auto a: distances) std::cout << a << std::endl;
+    std::vector<glm::vec3> gradients = SDF.second;
     for (int gz = 0; gz < grid_dimensions.z; ++gz) {
         for (int gy = 0; gy < grid_dimensions.y; ++gy) {
             for (int gx = 0; gx < grid_dimensions.x; ++gx) {
@@ -85,8 +165,11 @@ void Fluid::init_ssbos() {
                     initial_grid.emplace_back(GridCell{
                         cell_pos,
                         glm::vec3(0),
-                        GRID_FLUID
+                        GRID_FLUID,
+                        distances[idx(gx,gy,gz)],
+                        gradients[idx(gx,gy,gz)]
                     });
+                    if (distances[idx(gx,gy,gz)]<0) std::cout << "FOUND" << std::endl;
 
                     if (gx < grid_cell_dimensions.x && gy < grid_cell_dimensions.y && gz < grid_cell_dimensions.z) {
                         for (int i = 0; i < particle_density; ++i) {
@@ -105,7 +188,9 @@ void Fluid::init_ssbos() {
                     initial_grid.emplace_back(GridCell{
                         cell_pos,
                         glm::vec3(0),
-                        GRID_AIR
+                        GRID_AIR,
+                        distances[idx(gx,gy,gz)],
+                        gradients[idx(gx,gy,gz)]
                     });
                 }
             }

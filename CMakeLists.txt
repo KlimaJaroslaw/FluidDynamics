@@ -45,9 +45,10 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(glfw)
 
-include_directories(Eigen)
-include_directories(fcpw)
+include_directories(Eigenn)
+include_directories(igll)
 include_directories(tinyobj)
+
 # add eigen
 #find_package (Eigen3 REQUIRED NO_MODULE)
 #target_link_libraries (fluid Eigen3::Eigen)
